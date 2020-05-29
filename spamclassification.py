@@ -32,9 +32,37 @@ for i in range(len(messages)):
     message = re.sub('[^a-zA-Z]',' ',messages['message'][i])
     message = message.lower()
     message = message.split()
-    message = [ps.stem(word) for word in message if word not in stopwords.words('english')]
+    message = [wl.lemmatize(word) for word in message if word not in stopwords.words('english')]
     message = ' '.join(message)
     corpus.append(message)
 
      
-    
+#Creating Bag of Words Model
+from sklearn.feature_extraction.text import TfidfVectorizer
+cv = TfidfVectorizer()
+X = cv.fit_transform(corpus).toarray()
+
+y = pd.get_dummies(messages['label'])
+y = y.iloc[:,1].values
+
+#Split the Dataset
+from sklearn.model_selection import train_test_split
+X_train,X_test,y_train,y_test =train_test_split(X,y,test_size = 0.2,random_state = 0)
+
+#Train the model using NaiveBayes Classifier
+from sklearn.naive_bayes import MultinomialNB
+spam_detect_model = MultinomialNB().fit(X_train,y_train)
+
+#Predict the values
+y_pred = spam_detect_model.predict(X_test)
+
+#Compare the prediction results with actual results
+from sklearn.metrics import confusion_matrix
+confusion_mat = confusion_matrix(y_test,y_pred)
+
+#Find the Accuracy of the model
+from sklearn.metrics import accuracy_score
+accuracy = accuracy_score(y_test,y_pred)
+print("Accuracy of the model ",accuracy)
+
+
